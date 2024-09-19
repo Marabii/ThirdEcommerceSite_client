@@ -160,6 +160,14 @@ const App = () => {
               </Suspense>
             }
           />
+          <Route
+            path="*"
+            element={
+              <Suspense fallback={<div>Loading...</div>}>
+                <ErrorFallback error={{ message: 'Page Not Found' }} />
+              </Suspense>
+            }
+          />
         </Routes>
       </BrowserRouter>
     </globalContext.Provider>
