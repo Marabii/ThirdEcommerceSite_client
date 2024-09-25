@@ -8,13 +8,13 @@ import Header from './components/Header.jsx'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <ErrorBoundary
+    {/* <ErrorBoundary
       FallbackComponent={ErrorFallback}
       onError={(error, info) => {
         console.error('Logging error:', error, info)
       }}
-    >
+    > */}
       <App />
-    </ErrorBoundary>
+    {/* </ErrorBoundary> */}
   </React.StrictMode>
 )

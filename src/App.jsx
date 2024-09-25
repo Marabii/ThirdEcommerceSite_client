@@ -17,6 +17,7 @@ const SuccessfulPayment = lazy(
 )
 const Contact = lazy(() => import('./pages/Contact/Contact'))
 const Shop = lazy(() => import('./pages/Shop/Shop'))
+const Test = lazy(() => import('./pages/testPage/page'))
 
 export const globalContext = createContext({
   isLoggedIn: false,
@@ -157,6 +158,14 @@ const App = () => {
             element={
               <Suspense fallback={<div>Loading...</div>}>
                 <Shop />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/test"
+            element={
+              <Suspense fallback={<div>Loading...</div>}>
+                <Test />
               </Suspense>
             }
           />
