@@ -11,7 +11,6 @@ const ProductDetailsJSX = (props) => {
   const serverURL = import.meta.env.VITE_REACT_APP_SERVER
   const { isLoggedIn, setCartItems } = useContext(globalContext)
   const { productDetails } = props
-  const [additionalImages, setAdditionalImages] = useState([])
   const [modalIsOpen, setModalIsOpen] = useState(false)
   const [currentImage, setCurrentImage] = useState('')
   const [priceData, setPriceData] = useState({});
@@ -24,21 +23,6 @@ const ProductDetailsJSX = (props) => {
     if (productDetails.price) getCorrectPrice()
     else setPriceData({price: productDetails.price, currency: 'SAR'})
   }, [productDetails])
-
-  useEffect(() => {
-    const getAdditionalImages = async () => {
-      try {
-        const response = await axios.get(
-          `${serverURL}/api/getAdditionalImages/${productDetails._id}`
-        )
-        const data = response.data
-        setAdditionalImages(data)
-      } catch (e) {
-        console.error(e)
-      }
-    }
-    getAdditionalImages()
-  }, [])
 
   const handleAddToCart = async () => {
     if (!isLoggedIn) {
@@ -93,7 +77,7 @@ const ProductDetailsJSX = (props) => {
   return (
     <>
       <div className="relative flex flex-col justify-between">
-        {additionalImages.length !== 0 ? (
+        {productDetails.additionalImages.length !== 0 ? (
           <Carousel
             autoPlay={true}
             showThumbs={false}
@@ -106,26 +90,26 @@ const ProductDetailsJSX = (props) => {
             }}
           >
             <img
-              src={`${serverURL}/products/${productDetails._id}.png`}
+              src={productDetails.productThumbnail}
               alt="product image"
               loading="lazy"
             />
-            {additionalImages.map((image) => (
+            {productDetails.additionalImages.map((image) => (
               <img
                 key={image}
-                src={`${serverURL}/additionalImages/${image}`}
+                src={image}
                 alt="additional Image"
               />
             ))}
           </Carousel>
         ) : (
           <img
-            src={`${serverURL}/products/${productDetails._id}.png`}
+            src={productDetails.productThumbnail}
             alt="product image"
             loading="lazy"
             onClick={() =>
               handleImageClick(
-                `${serverURL}/products/${productDetails._id}.png`
+                productDetails.productThumbnail
               )
             }
           />

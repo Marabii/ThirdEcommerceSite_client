@@ -72,19 +72,19 @@ const CardItemId = (props) => {
 
   useEffect(() => {
     const getCorrectPrice = async () => {
-      const result = await convertCurrency(data.price);
+      const result = await convertCurrency(data?.price);
       setPriceData(result);
 
       // Calculate old price
       if (data.promo && data.promo > 0) {
-        const oldPriceValue = Number(result.price) / (1 - data.promo / 100);
+        const oldPriceValue = Number(result?.price) / (1 - data.promo / 100);
         setOldPrice(oldPriceValue);
       } else {
         setOldPrice(0);
       }
     };
 
-    if (data.price) getCorrectPrice();
+    if (data?.price) getCorrectPrice();
   }, [data]);
 
   if (!data) {
@@ -139,7 +139,7 @@ const CardItemId = (props) => {
         {data.name}
       </h2>
       <h3 className="w-fit p-2 text-lg font-semibold">
-        {priceData.price?.toFixed(2)} {priceData.currency}{' '}
+        {priceData?.price?.toFixed(2)} {priceData?.currency}{' '}
         {oldPrice !== 0 && (
           <span className="font-normal text-slate-400 line-through">
             {oldPrice?.toFixed(2)} {priceData.currency}

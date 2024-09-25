@@ -71,7 +71,7 @@ const Section1 = () => {
             </div>
             <img
               className="relative order-1 aspect-auto lg:order-2 lg:w-[500px] lg:pr-5 xl:-top-10 xl:w-[700px]"
-              src={`${serverURL}/products/${sliderImgs[index]}`}
+              src={`${serverURL}/sliderImages/${sliderImgs[index]}`}
               alt="slider-image"
             />
           </div>

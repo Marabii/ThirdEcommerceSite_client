@@ -124,7 +124,7 @@ const CartItem = (props) => {
     <>
       <div className={loading ? 'opacity-40' : 'opacity-100'}>
         <img
-          src={`${serverURL}/products/${productID}.png`}
+          src={productData.productThumbnail}
           alt="cart-item"
           className="h-auto w-[80px]"
         />

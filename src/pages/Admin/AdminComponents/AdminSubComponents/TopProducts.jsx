@@ -74,7 +74,7 @@ const TopProducts = () => {
             onClick={() => navigate(`/product-page/${product._id}`)}
           >
             <img
-              src={`${serverURL}/products/${product._id}.png`}
+              src={product.productThumbnail}
               alt={product.name}
               className="aspect-square w-[40px]"
             />

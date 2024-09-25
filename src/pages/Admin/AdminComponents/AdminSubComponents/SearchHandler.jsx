@@ -69,7 +69,7 @@ const SearchHandler = ({ setCurrentProduct, placeholder }) => {
                 >
                   <img
                     className="size-16"
-                    src={`${serverURL}/products/${result.objectID}.png`}
+                    src={result.productThumbnail}
                     alt="search product"
                   />
                   <p>{result.name}</p>
