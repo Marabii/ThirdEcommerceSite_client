@@ -22,8 +22,8 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isCartOpen, setIsCartOpen] = useState(false)
   const { cartItems, isLoggedIn, userData } = useContext(globalContext)
-  const isAdmin = userData.isAdmin
-  const userId = userData._id
+  const isAdmin = userData?.isAdmin || false
+  const userId = userData?._id
   const serverURL = import.meta.env.VITE_REACT_APP_SERVER
   const [scrolled, setScrolled] = useState(false)
   const [searchLoaded, setSearchLoaded] = useState(false)

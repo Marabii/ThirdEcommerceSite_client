@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import axiosInstance from './verifyJWT'
 import countryToCurrency from 'country-to-currency'
 import { jwtDecode } from 'jwt-decode'
@@ -8,30 +8,54 @@ const UseAuthCheck = (props) => {
   const { interval, setIsLoggedIn, setCartItems, setUserData, setExploreAll } =
     props
   const serverURL = import.meta.env.VITE_REACT_APP_SERVER
-  const jwtTokenUnDecoded = localStorage.getItem('jwtToken')
-  const jwtToken = jwtTokenUnDecoded && jwtDecode(jwtTokenUnDecoded)
+  const [jwtTokenUnDecoded, setJwtTokenUnDecoded] = useState("")
+  const [jwtToken, setJwtToken] = useState({})
   const userId = jwtToken?.sub
+
+  useEffect(() => {
+    const storedJwtToken = localStorage.getItem('jwtToken');
+  
+    if (storedJwtToken) {
+      setJwtTokenUnDecoded(storedJwtToken);
+    } else {
+      const params = new URLSearchParams(window.location.search);
+      const tokenFromUrl = params.get('token');
+  
+      if (tokenFromUrl) {
+        setJwtTokenUnDecoded(tokenFromUrl);
+        localStorage.setItem('jwtToken', tokenFromUrl); 
+      } else {
+        setJwtTokenUnDecoded(undefined);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (jwtTokenUnDecoded) setJwtToken(jwtDecode(jwtTokenUnDecoded))
+  }, [jwtTokenUnDecoded])
+  
 
   useEffect(() => {
     const getUserData = async () => {
       try {
+        console.log("getUserData function ran")
         const response = await axiosInstance(
-          `${serverURL}/api/getUserData/${userId}`
+          `${serverURL}/api/getUserData`
         )
         const data = response.data
-        setUserData(data[0])
+        setUserData(data)
       } catch (e) {
         console.error(e)
       }
     }
     if (userId) getUserData()
-  }, [])
+  }, [userId])
 
   useEffect(() => {
     const verifyUser = async () => {
       try {
         const response = await axiosInstance.get(`${serverURL}/api/verifyUser`)
-        setIsLoggedIn(response.data.isLoggedIn)
+        setIsLoggedIn(response.data.isLoggedIn && userId !== undefined)
         setCartItems(response.data.cartItems || [])
       } catch (error) {
         console.error('Failed to verify user:', error)
@@ -43,7 +67,7 @@ const UseAuthCheck = (props) => {
     const intervalId = setInterval(verifyUser, interval)
 
     return () => clearInterval(intervalId)
-  }, [])
+  }, [userId])
 
   useEffect(() => {
     const getExploreAll = async () => {

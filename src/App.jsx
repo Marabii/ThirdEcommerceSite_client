@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState, createContext } from 'react'
+import { lazy, Suspense, useState, useEffect, createContext } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import UseAuthCheck from './utils/verifyUser'
 import ErrorFallback from './pages/ErrorFallback/ErrorFallback'

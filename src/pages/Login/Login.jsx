@@ -136,6 +136,14 @@ const Login = () => {
             >
               Login
             </button>
+            <a href="https://accounts.google.com/o/oauth2/v2/auth?redirect_uri=http://localhost:3001/google/callback&response_type=code&client_id=1028629889843-4vf1i5nfjis4o4ht1posamrrrv5l106p.apps.googleusercontent.com&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile+openid&access_type=offline">
+              <button
+                type="button"
+                className="w-full border-2 mt-5 border-black bg-black py-4 font-playfair font-bold text-white transition-all duration-300 hover:bg-white hover:text-black"
+              >
+                Sign In With Google
+              </button>
+            </a>
             <p className="mt-5 w-full text-start text-gray-800">
               Don't Have An Account ?{' '}
               <button
