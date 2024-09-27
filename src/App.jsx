@@ -11,8 +11,6 @@ const Register = lazy(() => import('./pages/Register/Register'))
 const Admin = lazy(() => import('./pages/Admin/Admin'))
 const ProductPage = lazy(() => import('./pages/Product/ProductPage'))
 const CheckoutPage = lazy(() => import('./pages/CheckoutPage/CheckoutPage'))
-const Profile = lazy(() => import('./pages/Profile/Profile'))
-const CheckOrder = lazy(() => import('./pages/Profile/CheckOrder'))
 const SuccessfulPayment = lazy(
   () => import('./pages/PaymentStatus/SuccessfulPayment')
 )
@@ -120,22 +118,6 @@ const App = () => {
             element={
               <Suspense fallback={<div>Loading...</div>}>
                 <SuccessfulPayment />
-              </Suspense>
-            }
-          />
-          <Route
-            path="/profile"
-            element={
-              <Suspense fallback={<div>Loading...</div>}>
-                <Profile />
-              </Suspense>
-            }
-          />
-          <Route
-            path="/check-order/:id"
-            element={
-              <Suspense fallback={<div>Loading...</div>}>
-                <CheckOrder />
               </Suspense>
             }
           />

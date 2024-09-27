@@ -76,7 +76,7 @@ const CardItem = (props) => {
         {promo && promo.promotionType === 'buyXget1' && (
           <div className="text-playfair absolute left-2 top-2 bg-gray-100 px-4 py-2 font-semibold text-gray-600">
             Buy {promo?.discountDetails?.buyXGet1Discount?.buyQuantity} Get 1
-            Free
+            For Free
           </div>
         )}
 
