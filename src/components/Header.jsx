@@ -23,7 +23,6 @@ const Header = () => {
   const [isCartOpen, setIsCartOpen] = useState(false)
   const { cartItems, isLoggedIn, userData } = useContext(globalContext)
   const isAdmin = userData?.isAdmin || false
-  const userId = userData?._id
   const serverURL = import.meta.env.VITE_REACT_APP_SERVER
   const [scrolled, setScrolled] = useState(false)
   const [searchLoaded, setSearchLoaded] = useState(false)
@@ -170,26 +169,12 @@ const Header = () => {
           />
           <Search color="rgb(107 114 128)" size={20} />
         </div>
-        {isLoggedIn ? (
-          <Link to={`/profile/${userId}`}>
-            <div className="mr-3 flex items-center justify-between gap-2 rounded-md border border-gray-500 p-1">
-              <CircleUserRound
-                color="rgb(107 114 128)"
-                strokeWidth={1}
-                size={30}
-                className="mr-5"
-              />
-              <p>Profile</p>
-            </div>
-          </Link>
-        ) : (
-          <Link to={'/login'}>
-            <div className="mr-3 flex items-center justify-between gap-2 rounded-md border border-gray-500 p-1">
-              <Key color="rgb(107 114 128)" size={30} strokeWidth={1} />
-              <p>Log In</p>
-            </div>
-          </Link>
-        )}
+        <Link to={'/login'}>
+          <div className="mr-3 flex items-center justify-between gap-2 rounded-md border border-gray-500 p-1">
+            <Key color="rgb(107 114 128)" size={30} strokeWidth={1} />
+            <p>Log In</p>
+          </div>
+        </Link>
         <div className="relative" onClick={() => setIsCartOpen(!isCartOpen)}>
           <ShoppingBag
             className="cursor-pointer"

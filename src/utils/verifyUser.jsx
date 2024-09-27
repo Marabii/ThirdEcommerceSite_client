@@ -5,7 +5,7 @@ import { jwtDecode } from 'jwt-decode'
 import axios from 'axios'
 
 const UseAuthCheck = (props) => {
-  const { interval, setIsLoggedIn, setCartItems, setUserData, setExploreAll } =
+  const { interval, setIsLoggedIn, setUserData, setExploreAll } =
     props
   const serverURL = import.meta.env.VITE_REACT_APP_SERVER
   const [jwtTokenUnDecoded, setJwtTokenUnDecoded] = useState("")
@@ -56,7 +56,6 @@ const UseAuthCheck = (props) => {
       try {
         const response = await axiosInstance.get(`${serverURL}/api/verifyUser`)
         setIsLoggedIn(response.data.isLoggedIn && userId !== undefined)
-        setCartItems(response.data.cartItems || [])
       } catch (error) {
         console.error('Failed to verify user:', error)
         setIsLoggedIn(false)

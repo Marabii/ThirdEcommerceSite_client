@@ -43,7 +43,7 @@ const SearchResults = ({ hits, setQuery, searchLoaded }) => {
           <div>No results found</div>
         ) : (
           <div className="overflow-y-auto" style={{ maxHeight: '400px' }}>
-            <div className="flex flex-wrap items-center justify-around pb-10">
+            <div className="flex flex-wrap items-start justify-around pb-10">
               {hits.map((hit) => (
                 <CardItemId
                   key={hit.objectID}

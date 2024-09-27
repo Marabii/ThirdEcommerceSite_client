@@ -2,6 +2,7 @@ import { lazy, Suspense, useState, useEffect, createContext } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import UseAuthCheck from './utils/verifyUser'
 import ErrorFallback from './pages/ErrorFallback/ErrorFallback'
+import useSetUpCartItems from './utils/useSetUpCartItems'
 
 const LandingPage = lazy(() => import('./pages/LandingPage/LandingPage'))
 const About = lazy(() => import('./pages/About/About'))
@@ -38,10 +39,11 @@ const App = () => {
   UseAuthCheck({
     interval: 10 * 60 * 1000,
     setIsLoggedIn: setIsLoggedIn,
-    setCartItems: setCartItems,
     setUserData: setUserData,
     setExploreAll: setExploreAll
   })
+
+  useSetUpCartItems(cartItems, setCartItems)
 
   return (
     <globalContext.Provider
@@ -122,7 +124,7 @@ const App = () => {
             }
           />
           <Route
-            path="/profile/:id"
+            path="/profile"
             element={
               <Suspense fallback={<div>Loading...</div>}>
                 <Profile />

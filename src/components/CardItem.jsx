@@ -1,73 +1,53 @@
-import { useState, useContext, useEffect } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
-import { globalContext } from '../App';
-import { useNavigate } from 'react-router-dom';
-import axiosInstance from '../utils/verifyJWT';
-import convertCurrency from '../utils/convertCurrency';
+import { useState, useContext, useEffect } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { globalContext } from '../App'
+import convertCurrency from '../utils/convertCurrency'
 
 const CardItem = (props) => {
-  const { data, display, width } = props;
-  const serverURL = import.meta.env.VITE_REACT_APP_SERVER;
-  const clientURL = import.meta.env.VITE_REACT_APP_CLIENT;
-  const [showAddToCart, setShowAddToCart] = useState(false);
-  const { isLoggedIn, setCartItems } = useContext(globalContext);
-  const navigate = useNavigate();
-  const [imageLoaded, setImageLoaded] = useState(false);
-  const [priceData, setPriceData] = useState({});
-  const [oldPrice, setOldPrice] = useState(0);
+  const { data, display, width } = props
+  const clientURL = import.meta.env.VITE_REACT_APP_CLIENT
+  const [showAddToCart, setShowAddToCart] = useState(false)
+  const { setCartItems } = useContext(globalContext)
+  const [imageLoaded, setImageLoaded] = useState(false)
+  const [priceData, setPriceData] = useState({})
+  const [oldPrice, setOldPrice] = useState(0)
+  const promo = data?.promo
 
-  const handleAddToCart = async () => {
-    if (!isLoggedIn) {
-      alert('You must log in before you can buy items');
-      navigate('/login');
-      return;
-    }
-
+  const handleAddToCart = () => {
     if (data.stock === 0) {
-      return alert('Sorry, we are out of stock');
+      return alert('Sorry, we are out of stock')
     }
 
     setCartItems((prev) => {
-      const itemExists = prev.find((item) => item.productId === data._id);
+      const itemExists = prev.find((item) => item.productId === data._id)
       if (itemExists) {
-        alert('Item already exists in your cart');
-        return prev;
+        alert('Item already exists in your cart')
+        return prev
       } else {
-        return [...prev, { productId: data._id, quantity: 1 }];
+        return [...prev, { productId: data._id, quantity: 1 }]
       }
-    });
-
-    try {
-      const response = await axiosInstance.post(
-        `${serverURL}/api/updateCart?isNewItem=true`,
-        { productId: data._id, quantity: 1 }
-      );
-      if (response.status !== 200) {
-        throw new Error('Failed to update cart');
-      }
-    } catch (e) {
-      console.error(e);
-      setCartItems((prev) => prev.filter((item) => item.productId !== data._id));
-      alert('Failed to update cart. Please try again.');
-    }
-  };
+    })
+  }
 
   useEffect(() => {
     const getCorrectPrice = async () => {
-      const result = await convertCurrency(data.price);
-      setPriceData(result);
+      const result = await convertCurrency(data.price)
+      setPriceData(result)
 
-      // Calculate old price
-      if (data.promo && data.promo > 0) {
-        const oldPriceValue = Number(result.price) / (1 - data.promo / 100);
-        setOldPrice(oldPriceValue);
+      // Calculate old price if promo is percentage-based
+      if (promo && promo.promotionType === 'percentage') {
+        const discount = promo?.discountDetails?.percentageDiscount?.amount
+        if (discount) {
+          const oldPriceValue = Number(result.price) / (1 - discount / 100)
+          setOldPrice(oldPriceValue)
+        }
       } else {
-        setOldPrice(0);
+        setOldPrice(0)
       }
-    };
+    }
 
-    if (data.price) getCorrectPrice();
-  }, [data]);
+    if (data.price) getCorrectPrice()
+  }, [data, promo])
 
   return (
     <div
@@ -82,11 +62,24 @@ const CardItem = (props) => {
           !imageLoaded && 'h-[420px] animate-pulse rounded-md'
         } bg-gray-400`}
       >
-        {data.promo !== 0 && (
+        {/* Percentage Promotion Display */}
+        {promo && promo.promotionType === 'percentage' && (
           <div className="text-playfair absolute left-2 top-2 bg-gray-100 px-4 py-2 font-semibold text-gray-600">
-            Promo: <span className="text-red-500">{data.promo}%</span> off
+            Promo:{' '}
+            <span className="text-red-500">
+              {promo?.discountDetails?.percentageDiscount?.amount}% off
+            </span>
           </div>
         )}
+
+        {/* Buy X Get 1 Promotion Display */}
+        {promo && promo.promotionType === 'buyXget1' && (
+          <div className="text-playfair absolute left-2 top-2 bg-gray-100 px-4 py-2 font-semibold text-gray-600">
+            Buy {promo?.discountDetails?.buyXGet1Discount?.buyQuantity} Get 1
+            Free
+          </div>
+        )}
+
         {data.stock === 0 && (
           <div className="text-playfair absolute right-2 top-2 bg-gray-100 px-4 py-2 font-semibold text-gray-600">
             Out Of Stock
@@ -127,7 +120,7 @@ const CardItem = (props) => {
         )}
       </h3>
     </div>
-  );
-};
+  )
+}
 
-export default CardItem;
+export default CardItem

@@ -1,36 +1,43 @@
 import React, { useContext, useEffect, useState } from 'react'
+import { useForm } from 'react-hook-form'
+import PhoneInput from 'react-phone-number-input'
+import 'react-phone-number-input/style.css'
 import { ShieldCheck } from 'lucide-react'
 import { globalContext } from '../../App'
-import CardItemId from '../../components/CardItemId'
+import CardItem from '../../components/CardItem'
 import axiosInstance from '../../utils/verifyJWT'
 import Header from '../../components/Header'
 import { useNavigate } from 'react-router-dom'
+import Select from 'react-select' // Add react-select for country dropdown
+import countryList from 'react-select-country-list' // Add country list for react-select
+import { parsePhoneNumberFromString } from 'libphonenumber-js'
 
 const CheckoutPage = () => {
   const [loaded, setLoaded] = useState(true)
+  const [countries, setCountries] = useState([]) // State to manage country list
   const navigate = useNavigate()
-  const { cartItems, userData } = useContext(globalContext)
+  const { cartItems, setCartItems } = useContext(globalContext)
   const serverURL = import.meta.env.VITE_REACT_APP_SERVER
-  const clientURL = import.meta.env.VITE_REACT_APP_CLIENT
-  const userId =
-    Object.keys(userData).length !== 0
-      ? userData._id
-      : (window.location.href = clientURL)
-  const items = cartItems.map((item) => {
-    return { id: item.productId, quantity: item.quantity }
-  })
-  const [formData, setFormData] = useState({
-    first_name: '',
-    last_name: '',
-    phone_number: '',
-    street: '',
-    city: '',
-    zipcode: '',
-    userId: userId
+  const [productsData, setProductsData] = useState([])
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors }
+  } = useForm({
+    defaultValues: {
+      fullName: '',
+      phoneNumber: '',
+      country: '',
+      address: ''
+    }
   })
 
   useEffect(() => {
     document.body.style.overflow = 'auto'
+    setCountries(countryList().getData()) // Set countries list on load
   }, [])
 
   useEffect(() => {
@@ -41,7 +48,7 @@ const CheckoutPage = () => {
         )
         const products = await Promise.all(productsPromises)
         products.forEach((product) => {
-          if (product.data.stock == 0) {
+          if (product.data.stock === 0) {
             alert('Sorry, one of the items in your cart is out of stock')
             handleRemoveCartItem(product.data._id)
             if (
@@ -68,6 +75,7 @@ const CheckoutPage = () => {
             }
           }
         })
+        setProductsData(products.map((item) => item.data))
       } catch (error) {
         console.error('Failed to get products:', error)
       }
@@ -76,124 +84,91 @@ const CheckoutPage = () => {
     getProducts()
   }, [cartItems])
 
-  async function handleRemoveCartItem(productID) {
-    try {
-      await axiosInstance.delete(`${serverURL}/api/deleteCartItem/${productID}`)
-      window.location.reload()
-    } catch (error) {
-      console.error('Failed to delete cart item:', error)
-      alert("Can't delete cart item")
-    }
+  const handleRemoveCartItem = () => {
+    const updatedCartItems = cartItems.filter(
+      (item) => item.productId !== productID
+    )
+
+    // Update localStorage
+    localStorage.setItem('cartItems', JSON.stringify(updatedCartItems))
+
+    // Update the cartItems in the context
+    setCartItems(updatedCartItems)
   }
 
-  async function handleChangeQuantity(productID, quantity) {
-    try {
-      await axiosInstance.post(`${serverURL}/api/updateCart?isNewItem=false`, {
-        productId: productID,
-        quantity: quantity
-      })
-    } catch (e) {
-      alert('Cannot set that quantity')
-      console.error(e)
-    }
-  }
+  const handleChangeQuantity = (quantityInput) => {
+    let newQuantity = quantityInput
 
-  const useDebounce = (callback, delay) => {
-    const [timer, setTimer] = useState(null)
-
-    const debouncedCallback = (...args) => {
-      if (timer) clearTimeout(timer)
-      const newTimer = setTimeout(() => {
-        callback(...args)
-      }, delay)
-      setTimer(newTimer)
+    if (quantityInput >= productData.stock) {
+      newQuantity = productData.stock
+    } else if (quantityInput < 1) {
+      newQuantity = 1
     }
 
-    return debouncedCallback
-  }
-
-  const validateField = (name, value) => {
-    const validations = {
-      first_name: {
-        regex: /^[a-zA-Z]{2,30}$/,
-        error:
-          'First name must be between 2 and 30 letters and contain no numbers or special characters.'
-      },
-      last_name: {
-        regex: /^[a-zA-Z]{2,30}$/,
-        error:
-          'Last name must be between 2 and 30 letters and contain no numbers or special characters.'
-      },
-      phone_number: {
-        regex: /^\+?[0-9]{7,15}$/,
-        error:
-          "Phone number must be between 7 and 15 digits and may start with a '+'."
-      },
-      street: {
-        regex: /^[a-zA-Z0-9\s,'-]{3,100}$/,
-        error:
-          'Street must be between 3 and 100 characters long and can include letters, numbers, spaces, commas, and hyphens.'
-      },
-      city: {
-        regex: /^[a-zA-Z\s]{2,50}$/,
-        error:
-          'City should only contain letters and spaces, and be between 2 and 50 characters long.'
-      },
-      zipcode: {
-        regex: /^[0-9]{5}(-[0-9]{4})?$/,
-        error:
-          'Zip code must be a 5-digit number or a 9-digit format with a dash.'
+    // Update cartItems in localStorage
+    const updatedCartItems = cartItems.map((item) => {
+      if (item.productId === productID) {
+        return { ...item, quantity: newQuantity }
       }
-    }
+      return item
+    })
 
-    const fieldValidation = validations[name]
+    // Update localStorage
+    localStorage.setItem('cartItems', JSON.stringify(updatedCartItems))
 
-    if (!fieldValidation.regex.test(value)) {
-      alert(
-        `${name.split('_').join(' ').toUpperCase()} is invalid: ${fieldValidation.error}`
-      )
-      setFormData((prev) => ({ ...prev, [name]: '' }))
-    }
+    // Update the cartItems in the context
+    setCartItems(updatedCartItems)
   }
 
-  const debouncedValidation = useDebounce(validateField, 400)
-
-  const handleFormData = (e) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value
-    }))
-    debouncedValidation(name, value)
-  }
-
-  const checkoutFunc = async () => {
-    const { first_name, last_name, phone_number, street, city, zipcode } =
-      formData
-    if (
-      !first_name ||
-      !last_name ||
-      !phone_number ||
-      !street ||
-      !city ||
-      !zipcode
-    ) {
-      alert('Please fill in all fields correctly.')
-      return
-    }
+  const onSubmit = async (data) => {
+    // Add cartItems to the form data
+    const formData = { ...data, cartItems }
 
     try {
-      const response = await axiosInstance.post(
-        `${serverURL}/api/create-checkout-session`,
-        { items: items, metadata: formData }
-      )
-      const url = response.data.url
-      window.location.href = url
-    } catch (e) {
-      alert('Error during checkout')
-      console.error(e)
+      // Make the API request to submit the order
+      const response = await fetch(`${serverURL}/api/accept-order`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData) // Send formData as JSON
+      })
+
+      // Handle the response
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Failed to submit order:', errorData)
+        alert(`Error: ${errorData.error || 'Failed to submit order'}`)
+        return
+      }
+
+      const result = await response.json()
+      console.log('Order submitted successfully:', result)
+
+      alert('Order submitted successfully!')
       navigate('/')
+    } catch (error) {
+      console.error('Error submitting order:', error)
+      alert('An error occurred while submitting the order. Please try again.')
     }
+  }
+
+  const validatePhoneNumber = (value) => {
+    const phoneNumber = parsePhoneNumberFromString(value || '') // Parse the phone number
+    if (phoneNumber && phoneNumber.isValid()) {
+      return true // Valid phone number
+    } else {
+      return 'Invalid phone number' // Return error message
+    }
+  }
+
+  const calculateBonus = (cartItem, promo) => {
+    if (promo && promo.promotionType === 'buyXget1') {
+      return Math.floor(
+        cartItem.quantity / promo.discountDetails.buyXGet1Discount.buyQuantity
+      )
+    }
+    return 0
   }
 
   return (
@@ -208,96 +183,109 @@ const CheckoutPage = () => {
           You're almost there! Complete your order
         </h1>
       </div>
-      <p className="my-[20px]">Chosen Product{cartItems.length > 1 && 's'}: </p>
-      <div className="flex flex-col items-center">
-        {cartItems.map((item) => {
+      <p className="my-[20px]">Chosen Product{cartItems.length > 1 && 's'}:</p>
+      <div className="mb-10 flex w-full flex-wrap items-start justify-between gap-5">
+        {productsData.map((data) => {
+          const cartItem = cartItems.find((item) => item.productId === data._id)
+          const bonus = calculateBonus(cartItem, data.promo)
           return (
-            <CardItemId
-              key={item.productId}
-              productId={item.productId}
-              display={false}
-              width={250}
-              setLoaded={setLoaded}
-              loading={loaded}
-            />
+            <div key={data._id}>
+              <CardItem data={data} display={true} />
+              <p>Quantity: {cartItem.quantity}</p>
+              {bonus > 0 && (
+                <p className="text-green-500">
+                  Bonus: {bonus} free item{bonus > 1 ? 's' : ''}
+                </p>
+              )}
+            </div>
           )
         })}
       </div>
-      <div className="mb-15 max-w-[700px] space-y-5">
-        <p className="text-2xl font-semibold text-purple-900">
-          Please fill this form
-        </p>
-        <div className="flex flex-col space-y-3 md:flex-row md:space-x-2 md:space-y-0">
-          <input
-            type="text"
-            name="first_name"
-            id="first_name"
-            placeholder="First Name"
-            required
-            onChange={handleFormData}
-            value={formData.first_name}
-            className="w-full rounded-md border-2 border-gray-200 px-2 py-3 font-jost text-lg"
-          />
-          <input
-            type="text"
-            name="last_name"
-            id="last_name"
-            placeholder="Last Name"
-            required
-            onChange={handleFormData}
-            value={formData.last_name}
-            className="w-full rounded-md border-2 border-gray-200 px-2 py-3 font-jost text-lg"
-          />
-        </div>
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="mb-15 max-w-[700px] space-y-5"
+      >
+        {/* Full Name */}
         <input
-          type="text"
-          name="phone_number"
-          id="phone_number"
-          placeholder="Phone Number"
-          required
-          onChange={handleFormData}
-          value={formData.phone_number}
+          {...register('fullName', {
+            required: 'Name is required',
+            pattern: {
+              value: /^[\p{L} .'-]+$/u,
+              message:
+                'Name must contain only letters, spaces, periods, apostrophes, or hyphens'
+            }
+          })}
+          placeholder="Full Name"
           className="w-full rounded-md border-2 border-gray-200 px-2 py-3 font-jost text-lg"
         />
-        <div className="space-y-3">
-          <input
-            type="text"
-            name="street"
-            id="street"
-            placeholder="Street"
-            required
-            onChange={handleFormData}
-            value={formData.street}
-            className="w-full rounded-md border-2 border-gray-200 px-2 py-3 font-jost text-lg"
-          />
-          <input
-            type="text"
-            name="city"
-            id="city"
-            placeholder="City"
-            required
-            onChange={handleFormData}
-            value={formData.city}
-            className="w-full rounded-md border-2 border-gray-200 px-2 py-3 font-jost text-lg"
-          />
-          <input
-            type="text"
-            name="zipcode"
-            id="zipcode"
-            placeholder="Zip Code"
-            required
-            onChange={handleFormData}
-            value={formData.zipcode}
-            className="w-full rounded-md border-2 border-gray-200 px-2 py-3 font-jost text-lg"
-          />
-        </div>
-      </div>
-      <button
-        onClick={checkoutFunc}
-        className="my-5 rounded-lg bg-purple-900 py-4 text-xl font-semibold text-white transition-all duration-300 hover:bg-purple-800"
-      >
-        PAY
-      </button>
+        {errors.fullName && (
+          <p className="text-red-500">{errors.fullName.message}</p>
+        )}
+
+        {/* Phone Number */}
+        <PhoneInput
+          {...register('phoneNumber', {
+            required: 'Phone Number is required',
+            validate: validatePhoneNumber // Add validation function
+          })}
+          international
+          defaultCountry="SA"
+          placeholder="Phone Number"
+          onChange={(value) => {
+            if (value !== '') {
+              setValue('phoneNumber', value)
+            }
+          }}
+          onFocus={(e) => {
+            e.target.style.border = 'none'
+          }}
+          className="w-full rounded-md border-2 border-gray-200 bg-transparent px-2 py-3 font-jost text-lg outline-none focus:border-none focus:outline-none"
+        />
+
+        {errors.phoneNumber && (
+          <p className="text-red-500">{errors.phoneNumber.message}</p>
+        )}
+
+        {/* Country (Dropdown) */}
+        <Select
+          {...register('country', { required: 'Country is required' })}
+          options={countries}
+          placeholder="Select Country"
+          className="w-full"
+          onChange={(option) => setValue('country', option.label)}
+        />
+        {errors.country && (
+          <p className="text-red-500">{errors.country.message}</p>
+        )}
+
+        {/* Address */}
+        <input
+          {...register('address')}
+          placeholder="Address (Optional)"
+          className="w-full rounded-md border-2 border-gray-200 px-2 py-3 font-jost text-lg"
+        />
+
+        {/* Email */}
+        <input
+          {...register('email', {
+            pattern: {
+              value: /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/,
+              message: 'Please enter a valid email address'
+            }
+          })}
+          type="email"
+          placeholder="Email (Optional)"
+          className="w-full rounded-md border-2 border-gray-200 px-2 py-3 font-jost text-lg"
+        />
+
+        {/* Submit Button */}
+        <button
+          type="submit"
+          className={`text-white' w-full rounded-md border-2 border-slate-500 px-4 py-3 font-bold transition-all duration-300 hover:bg-slate-500 hover:text-white`}
+        >
+          ORDER
+        </button>
+      </form>
     </div>
   )
 }

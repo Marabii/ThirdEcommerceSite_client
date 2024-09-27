@@ -6,7 +6,6 @@ import ProductDetailsJSX from './sections/ProductDetails'
 import Section2 from './sections/Section2'
 import Section3 from './sections/Section3'
 import Section4 from './sections/Section4'
-import ReviewsComponent from './sections/ReviewsComponent'
 import TopSection from '../../components/TopSection'
 import Footer from '../../components/Footer'
 import { useNavigate } from 'react-router-dom'
@@ -50,7 +49,6 @@ const ProductPage = () => {
         <ProductDetailsJSX productDetails={productDetails} />
         <div className="md:col-start-1 md:col-end-2 lg:col-end-3">
           <Section2 productDetails={productDetails} />
-          <ReviewsComponent productDetails={productDetails} />
           <Section3 productDetails={productDetails} />
         </div>
         <Section4 id={id} />

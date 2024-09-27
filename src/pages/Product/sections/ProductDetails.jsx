@@ -24,46 +24,21 @@ const ProductDetailsJSX = (props) => {
     else setPriceData({price: productDetails.price, currency: 'SAR'})
   }, [productDetails])
 
-  const handleAddToCart = async () => {
-    if (!isLoggedIn) {
-      alert('You must log in before you can buy items')
-      navigate('/login')
-      return
-    }
-
+  const handleAddToCart = () => {
     if (productDetails.stock === 0) {
-      alert('Sorry, we are out of stock')
-      return
+      return alert('Sorry, we are out of stock');
     }
 
     setCartItems((prev) => {
-      const itemExists = prev.find(
-        (item) => item.productId === productDetails._id
-      )
+      const itemExists = prev.find((item) => item.productId === productDetails._id);
       if (itemExists) {
-        alert('Item already exists in your cart')
-        return prev
+        alert('Item already exists in your cart');
+        return prev;
       } else {
-        return [...prev, { productId: productDetails._id, quantity: 1 }]
+        return [...prev, { productId: productDetails._id, quantity: 1 }];
       }
-    })
-
-    try {
-      const response = await axiosInstance.post(
-        `${serverURL}/api/updateCart?isNewItem=true`,
-        { productId: productDetails._id, quantity: 1 }
-      )
-      if (response.status !== 200) {
-        throw new Error('Failed to update cart')
-      }
-    } catch (e) {
-      console.error(e)
-      setCartItems((prev) =>
-        prev.filter((item) => item.productId !== productDetails._id)
-      )
-      alert('Failed to update cart. Please try again.')
-    }
-  }
+    });
+  };
 
   const handleImageClick = (imageSrc) => {
     setCurrentImage(imageSrc)

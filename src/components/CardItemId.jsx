@@ -1,10 +1,8 @@
 import React, { useState, useContext, useEffect } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { globalContext } from '../App'
-import { useNavigate } from 'react-router-dom'
-import axiosInstance from '../utils/verifyJWT'
 import axios from 'axios'
-import convertCurrency from '../utils/convertCurrency';
+import convertCurrency from '../utils/convertCurrency'
 
 const CardItemId = (props) => {
   const { productId, display, width, setLoaded, loaded } = props
@@ -12,18 +10,11 @@ const CardItemId = (props) => {
   const [showAddToCart, setShowAddToCart] = useState(false)
   const serverURL = import.meta.env.VITE_REACT_APP_SERVER
   const clientURL = import.meta.env.VITE_REACT_APP_CLIENT
-  const { isLoggedIn, setCartItems } = useContext(globalContext)
-  const navigate = useNavigate()
-  const [priceData, setPriceData] = useState({});
-  const [oldPrice, setOldPrice] = useState(0);
+  const { setCartItems } = useContext(globalContext)
+  const [priceData, setPriceData] = useState({})
+  const [oldPrice, setOldPrice] = useState(0)
 
-  const handleAddToCart = async () => {
-    if (!isLoggedIn) {
-      alert('You must log in before you can buy items')
-      navigate('/login')
-      return
-    }
-
+  const handleAddToCart = () => {
     if (data.stock === 0) {
       return alert('Sorry, we are out of stock')
     }
@@ -37,20 +28,6 @@ const CardItemId = (props) => {
         return [...prev, { productId: data._id, quantity: 1 }]
       }
     })
-
-    try {
-      const response = await axiosInstance.post(
-        `${serverURL}/api/updateCart?isNewItem=true`,
-        { productId: data._id, quantity: 1 }
-      )
-      if (response.status !== 200) {
-        throw new Error('Failed to update cart')
-      }
-    } catch (e) {
-      console.error(e)
-      setCartItems((prev) => prev.filter((item) => item.productId !== data._id))
-      alert('Failed to update cart. Please try again.')
-    }
   }
 
   useEffect(() => {
@@ -64,47 +41,61 @@ const CardItemId = (props) => {
         setData(data)
       } catch (e) {
         console.error(e)
-        alert('unable to get product')
+        alert('Unable to get product')
       }
     }
     getProductData()
-  }, [])
+  }, [productId, serverURL, setLoaded])
 
   useEffect(() => {
     const getCorrectPrice = async () => {
-      const result = await convertCurrency(data?.price);
-      setPriceData(result);
+      const result = await convertCurrency(data?.price)
+      setPriceData(result)
 
-      // Calculate old price
-      if (data.promo && data.promo > 0) {
-        const oldPriceValue = Number(result?.price) / (1 - data.promo / 100);
-        setOldPrice(oldPriceValue);
+      // Calculate old price for percentage-based promo
+      if (data?.promo?.promotionType === 'percentage') {
+        const discount =
+          data?.promo?.discountDetails?.percentageDiscount?.amount
+        if (discount) {
+          const oldPriceValue = Number(result?.price) / (1 - discount / 100)
+          setOldPrice(oldPriceValue)
+        }
       } else {
-        setOldPrice(0);
+        setOldPrice(0) // No old price when no percentage-based promo
       }
-    };
+    }
 
-    if (data?.price) getCorrectPrice();
-  }, [data]);
+    if (data?.price) getCorrectPrice()
+  }, [data])
 
   if (!data) {
-    return
+    return null
   }
 
   return (
     <div
       style={{ width: width ? `${width}px` : 'fit-content' }}
       key={data._id}
-      className={`mb-5 cursor-pointer shadow-xl`}
+      className="mb-5 cursor-pointer shadow-xl"
     >
       <div
         onMouseEnter={() => setShowAddToCart(true)}
         onMouseLeave={() => setShowAddToCart(false)}
-        className={`relative aspect-square w-full max-w-[400px] ${loaded && 'h-[420px] animate-pulse rounded-md'} bg-gray-400`}
+        className={`relative aspect-square w-full max-w-[400px] bg-gray-400`}
       >
-        {data.promo !== 0 && (
+        {data.promo && data.promo.promotionType === 'percentage' && (
           <div className="text-playfair absolute left-2 top-2 bg-gray-100 px-4 py-2 font-semibold text-gray-600">
-            Promo: <span className="text-red-500">{data.promo}%</span> off
+            Promo:{' '}
+            <span className="text-red-500">
+              {data.promo?.discountDetails?.percentageDiscount?.amount}%
+            </span>{' '}
+            off
+          </div>
+        )}
+        {data.promo && data.promo.promotionType === 'buyXget1' && (
+          <div className="text-playfair absolute left-2 top-2 bg-gray-100 px-4 py-2 font-semibold text-gray-600">
+            Buy {data.promo?.discountDetails?.buyXGet1Discount?.buyQuantity} Get
+            1 For Free
           </div>
         )}
         {data.stock === 0 && (
@@ -142,7 +133,7 @@ const CardItemId = (props) => {
         {priceData?.price?.toFixed(2)} {priceData?.currency}{' '}
         {oldPrice !== 0 && (
           <span className="font-normal text-slate-400 line-through">
-            {oldPrice?.toFixed(2)} {priceData.currency}
+            {oldPrice?.toFixed(2)} {priceData?.currency}
           </span>
         )}
       </h3>
