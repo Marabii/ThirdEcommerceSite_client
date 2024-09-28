@@ -24,17 +24,13 @@ const FileUpload = () => {
     const formData = new FormData()
 
     files.forEach((file) => {
+      console.log(file)
       formData.append('files', file) // Note the name 'files' for each file
     })
 
-    formData.append(
-      'metadata',
-      JSON.stringify({ value1: 'foo', value2: 'bar' })
-    )
-
     try {
       const response = await axios.post(
-        'http://localhost:3001/upload/additionalImages',
+        'http://localhost:3001/api/upload/additionalImages',
         formData,
         {
           headers: {

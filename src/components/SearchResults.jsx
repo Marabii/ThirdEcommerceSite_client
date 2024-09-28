@@ -38,8 +38,8 @@ const SearchResults = ({ hits, setQuery, searchLoaded }) => {
         />
         <h2 className="text-2xl font-bold text-slate-600">Search Results</h2>
       </div>
-      {searchLoaded ? (
-        hits.length === 0 ? (
+      {searchLoaded && hits ? (
+        hits?.length === 0 ? (
           <div>No results found</div>
         ) : (
           <div className="overflow-y-auto" style={{ maxHeight: '400px' }}>
@@ -47,7 +47,7 @@ const SearchResults = ({ hits, setQuery, searchLoaded }) => {
               {hits.map((hit) => (
                 <CardItemId
                   key={hit.objectID}
-                  productId={hit._id.$oid}
+                  productId={hit._id.$oid || hit._id}
                   display={false}
                   width={250}
                   setLoaded={setLoaded}

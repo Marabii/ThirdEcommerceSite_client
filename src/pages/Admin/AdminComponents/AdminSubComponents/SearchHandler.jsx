@@ -46,9 +46,9 @@ const SearchHandler = ({ setCurrentProduct, placeholder }) => {
         onChange={handleQueryChange}
         className="w-full rounded-lg border border-slate-500 px-4 py-5"
       />
-      {query.length > 0 && (
+      {query?.length > 0 && (
         <div className="mt-2 max-h-[1900px] w-full">
-          {!searchLoaded ? (
+          {!searchLoaded && results ? (
             <div className="flex items-center justify-center">
               <div
                 className="inline-block animate-spin rounded-full border-4"
@@ -57,12 +57,12 @@ const SearchHandler = ({ setCurrentProduct, placeholder }) => {
                 <LoaderCircle strokeWidth={0.5} size={100} />
               </div>
             </div>
-          ) : results.length > 0 ? (
+          ) : results?.length > 0 ? (
             <div className="relative flex flex-col gap-2 overflow-y-scroll">
               {results.map((result) => (
                 <button
                   onClick={() => {
-                    setCurrentProduct(result.objectID)
+                    setCurrentProduct(result._id.$oid || result._id)
                     setQuery('')
                   }}
                   className="flex items-center justify-between rounded-md bg-slate-200 p-2 transition-all duration-300 hover:bg-slate-300"

@@ -1,4 +1,4 @@
-import { useState, useContext } from 'react'
+import { useState, useContext, useEffect } from 'react'
 import { globalContext } from '../../../../App'
 
 import DropzoneHandler from './DropzoneHandler'
@@ -24,11 +24,21 @@ const AddProduct = () => {
 
   //----Get Categories----
   const categories = useContext(globalContext).exploreAll.categories
+
+  useEffect(() => {
+    if (categories)
+      setProductDetailsForm((prev) => ({
+        ...prev,
+        category: categories[0]
+      }))
+  }, [categories])
   //----End Of Get Categories----
 
   //----Handle dropzone----
   const [images, setImages] = useState([])
   const [thumbnail, setThumbnail] = useState([])
+  const [hasThumbnailChanged, setHasThumbnailChanged] = useState(false)
+  const [haveImagesChanged, setHaveImagesChanged] = useState(false)
   //----finish handle dropzone----
 
   const { handleSubmit } = UploadData({
@@ -42,22 +52,38 @@ const AddProduct = () => {
 
   const handleProductDetailsFormChange = (e) => {
     const { name, value } = e.target
-    if (name === 'name') {
-      if (value.length > 20) {
-        alert('Product name should not exceed 20 characters')
-        return
-      }
+
+    // Limit the product name and description length
+    if (name === 'name' && value.length > 20) {
+      alert('Product name should not exceed 20 characters')
+      return
     }
 
     if (name === 'description' && value.length > 360) {
       alert('Description should not exceed 360 characters')
       return
     }
-    
-    setProductDetailsForm((prev) => ({
-      ...prev,
-      [name]: value
-    }))
+
+    // If the user selects "Add New Category", we show an input for the new category
+    if (name === 'category' && value === 'new-category') {
+      setProductDetailsForm((prev) => ({
+        ...prev,
+        [name]: value,
+        newCategory: '' // Add a new field to store the custom category
+      }))
+    } else if (name === 'newCategory') {
+      // Update the new category field when the user types a new category
+      setProductDetailsForm((prev) => ({
+        ...prev,
+        newCategory: value
+      }))
+    } else {
+      // Update the form state normally
+      setProductDetailsForm((prev) => ({
+        ...prev,
+        [name]: value
+      }))
+    }
   }
 
   return (
@@ -84,7 +110,7 @@ const AddProduct = () => {
           Do not exceed 20 characters when entering the product name.
         </p>
       </div>
-      <div className="my-2 flex justify-between">
+      <div className="my-2 flex justify-between gap-3">
         <div>
           <label className="mb-2 block text-lg font-semibold" htmlFor="price">
             Price
@@ -173,16 +199,16 @@ const AddProduct = () => {
             Category
           </label>
           {categories ? (
-            <select
-              required
-              name="category"
-              id="category"
-              value={productDetailsForm.category}
-              onChange={handleProductDetailsFormChange}
-              className="w-full rounded-md border border-gray-500 p-2 text-lg"
-            >
-              {categories.map((category) => {
-                return (
+            <>
+              <select
+                required
+                name="category"
+                id="category"
+                value={productDetailsForm.category}
+                onChange={handleProductDetailsFormChange}
+                className="w-full rounded-md border border-gray-500 p-2 text-lg"
+              >
+                {categories.map((category) => (
                   <option
                     key={category}
                     value={category}
@@ -190,9 +216,25 @@ const AddProduct = () => {
                   >
                     {category}
                   </option>
-                )
-              })}
-            </select>
+                ))}
+                <option value="new-category" className="capitalize">
+                  Add New Category
+                </option>
+              </select>
+
+              {/* Conditionally render input field for new category */}
+              {productDetailsForm.category === 'new-category' && (
+                <input
+                  type="text"
+                  name="newCategory"
+                  placeholder="Enter new category"
+                  value={productDetailsForm.newCategory || ''}
+                  onChange={handleProductDetailsFormChange}
+                  className="mt-2 w-full rounded-md border border-gray-500 p-2 text-lg"
+                  required
+                />
+              )}
+            </>
           ) : (
             <div className="w-full animate-pulse rounded-md border border-gray-500 p-2 text-lg"></div>
           )}
@@ -215,6 +257,8 @@ const AddProduct = () => {
           images={images}
           setImages={setImages}
           setThumbnail={setThumbnail}
+          setHasThumbnailChanged={setHasThumbnailChanged}
+          setHaveImagesChanged={setHaveImagesChanged}
           thumbnail={thumbnail}
         />
       </div>

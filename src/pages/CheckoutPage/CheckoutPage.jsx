@@ -203,7 +203,7 @@ const CheckoutPage = () => {
       </div>
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="mb-15 max-w-[700px] space-y-5"
+        className="mb-15 mx-auto max-w-[700px] space-y-5"
       >
         {/* Full Name */}
         <input

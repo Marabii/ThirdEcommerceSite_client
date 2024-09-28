@@ -35,20 +35,23 @@ const SpecificationHandler = ({
       <label htmlFor="specification" className="text-lg font-semibold">
         Specifications
       </label>
-      <div id="specification" className="my-3 flex items-center">
+      <div
+        id="specification"
+        className="my-3 flex flex-wrap items-center justify-center space-x-2"
+      >
         <input
           type="text"
           placeholder="Key"
           value={tempKey}
           onChange={(e) => setTempKey(e.target.value)}
-          className="rounded border px-2 py-1"
+          className="w-1/3 rounded border px-2 py-1"
         />
         <input
           type="text"
           placeholder="Value"
           value={tempValue}
           onChange={(e) => setTempValue(e.target.value)}
-          className="ml-2 rounded border px-2 py-1"
+          className="w-1/3 rounded border px-2 py-1"
         />
         <button
           type="button"

@@ -1,6 +1,7 @@
 import { useDropzone } from 'react-dropzone'
 import { useCallback, useEffect } from 'react'
 import { ImagePlus, X } from 'lucide-react'
+import axiosInstance from '../../../../utils/verifyJWT'
 
 const DropzoneHandler = ({
   images,
@@ -10,22 +11,25 @@ const DropzoneHandler = ({
   setHasThumbnailChanged,
   setHaveImagesChanged
 }) => {
+  // Handle image drop for additional images
   const onDrop = useCallback((acceptedFiles) => {
     if (acceptedFiles.length > 3) {
       alert('You can only upload up to 3 images')
       setImages([])
     } else {
       setHaveImagesChanged(true)
-      setImages(
-        acceptedFiles.map((file) =>
+      setImages((prev) => [
+        ...prev,
+        ...acceptedFiles.map((file) =>
           Object.assign(file, {
             preview: URL.createObjectURL(file)
           })
         )
-      )
+      ])
     }
   }, [])
 
+  // Handle dropzone for images
   const useDropZoneImages = useDropzone({
     onDrop,
     accept: {
@@ -37,6 +41,7 @@ const DropzoneHandler = ({
   const getRootPropsImages = useDropZoneImages.getRootProps
   const getInputPropsImages = useDropZoneImages.getInputProps
 
+  // Handle thumbnail drop
   const useDropZoneThumbnail = useDropzone({
     accept: {
       'image/*': ['.jpeg', '.jpg', '.png']
@@ -57,45 +62,111 @@ const DropzoneHandler = ({
   const getRootPropsThumbnail = useDropZoneThumbnail.getRootProps
   const getInputPropsThumbnail = useDropZoneThumbnail.getInputProps
 
+  // Cleanup file object URLs
   useEffect(() => {
-    setTimeout(() => {
+    return () => {
       images.forEach((file) => URL.revokeObjectURL(file.preview))
-    }, 1000)
-  }, [images])
+      thumbnail.forEach((file) => URL.revokeObjectURL(file.preview))
+    }
+  }, [images, thumbnail])
 
-  const thumbsForImages = images.map((file) => (
-    <div key={file.name} className="my-10">
+  // Handle image display (URLs or file previews)
+  const renderImagePreview = (image) => {
+    if (typeof image === 'string') {
+      // Image is a valid URL
+      return <img src={image} className="size-28" />
+    } else {
+      // Image is a file preview
+      return <img src={image.preview} className="size-28" />
+    }
+  }
+
+  const deleteProductImage = async (fileName) => {
+    if (fileName.includes('products')) setHasThumbnailChanged(true)
+    if (fileName.includes('additionalImages')) setHaveImagesChanged(true)
+    console.log('deleting image: ', fileName)
+    try {
+      await axiosInstance.delete(
+        `${import.meta.env.VITE_REACT_APP_SERVER}/api/deleteItem`,
+        {
+          data: { fileName }
+        }
+      )
+    } catch (e) {
+      console.error('something went wrong: ', e)
+    }
+  }
+
+  // Thumbnails for additional images
+  const thumbsForImages = images.map((file, index) => (
+    <div key={file.name || index} className="my-10">
       <div className="relative flex w-fit gap-2 rounded-md border-2 border-black p-2 align-top">
-        <img src={file.preview} className="size-28" />
+        {renderImagePreview(file)}
         <X
           size={20}
           className="absolute right-1 top-1 box-content cursor-pointer rounded-full bg-red-600 stroke-white p-1"
-          onClick={() =>
-            setImages((prev) => {
-              return prev.filter((image) => image.name !== file.name)
-            })
-          }
+          onClick={async () => {
+            if (window.confirm('Are you sure you want to delete this image?')) {
+              if (file instanceof File) {
+                // If it's a file object, remove it from state
+                setImages((prev) =>
+                  prev.filter(
+                    (image) => image.name !== file.name && image !== file
+                  )
+                )
+              } else {
+                // If it's a URL, extract the file path and delete it from the server
+                const fileName = file.split(
+                  `${import.meta.env.VITE_REACT_APP_BUCKETNAME}/`
+                )[1]
+                await deleteProductImage(fileName)
+                setImages(
+                  (prev) => prev.filter((image) => image !== file) // Remove from the state after deletion
+                )
+              }
+            }
+          }}
         />
       </div>
     </div>
   ))
 
-  const thumbsForThumbnail = thumbnail.map((file) => (
-    <div key={file.name} className="my-10">
+  // Thumbnails for main thumbnail
+  const thumbsForThumbnail = thumbnail.map((file, index) => (
+    <div key={file.name || index} className="my-10">
       <div className="relative flex w-fit gap-2 rounded-md border-2 border-black p-2 align-top">
-        <img src={file.preview} className="size-28" />
+        {renderImagePreview(file)}
         <X
           size={20}
           className="absolute right-1 top-1 box-content cursor-pointer rounded-full bg-red-600 stroke-white p-1"
-          onClick={() =>
-            setThumbnail((prev) => {
-              return prev.filter((image) => image.name !== file.name)
-            })
-          }
+          onClick={async () => {
+            if (
+              window.confirm('Are you sure you want to delete this thumbnail?')
+            ) {
+              if (file instanceof File) {
+                // If it's a file object, remove it from state
+                setThumbnail((prev) =>
+                  prev.filter(
+                    (image) => image.name !== file.name && image !== file
+                  )
+                )
+              } else {
+                // If it's a URL, extract the file path and delete it from the server
+                const fileName = file.split(
+                  `${import.meta.env.VITE_REACT_APP_BUCKETNAME}/`
+                )[1]
+                await deleteProductImage(fileName)
+                setThumbnail(
+                  (prev) => prev.filter((image) => image !== file) // Remove from the state after deletion
+                )
+              }
+            }
+          }}
         />
       </div>
     </div>
   ))
+
   return (
     <>
       <div>
@@ -127,6 +198,7 @@ const DropzoneHandler = ({
           </aside>
         </section>
       </div>
+
       <div>
         <label
           className="my-5 block text-lg font-semibold"

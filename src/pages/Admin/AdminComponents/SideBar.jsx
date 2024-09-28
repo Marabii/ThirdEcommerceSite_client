@@ -47,19 +47,6 @@ const SideBarAdmin = () => {
           />
           <p className="text-lg font-semibold">Orders</p>
         </NavLink>
-        <NavLink
-          to="/admin/users"
-          className={({ isActive }) =>
-            isActive ? `${linkStyle} ${activeStyle}` : linkStyle
-          }
-        >
-          <User
-            className={({ isActive }) =>
-              `stroke-current ${isActive ? 'text-blue-500' : 'text-black'}`
-            }
-          />
-          <p className="text-lg font-semibold">Users</p>
-        </NavLink>
       </div>
     </div>
   )

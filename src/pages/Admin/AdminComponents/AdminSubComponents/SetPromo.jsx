@@ -11,6 +11,8 @@ const SetPromo = () => {
   const [loaded, setLoaded] = useState(true)
   const [itemsWithDiscount, setItemsWithDiscount] = useState([])
   const [discountForAll, setDiscountForAll] = useState(0)
+  const [promoType, setPromoType] = useState('percentage') // New state for promotion type
+  const [buyQuantity, setBuyQuantity] = useState(1) // State for buyXget1 type
   const serverURL = import.meta.env.VITE_REACT_APP_SERVER
 
   const handleOptionChange = (value) => {
@@ -22,9 +24,9 @@ const SetPromo = () => {
     setIsOpen(!isOpen)
   }
 
-  const handleDiscountSpecific = (e) => {
+  const handleDiscountSpecific = (e, type) => {
     setItemsWithDiscount((prev) => {
-      const obj = { product: e.target.id, discount: e.target.value }
+      const obj = { product: e.target.id, discount: e.target.value, type } // Include promotion type
       const prodIndex = prev.findIndex((item) => item.product === obj.product)
 
       if (prodIndex === -1) {
@@ -42,7 +44,9 @@ const SetPromo = () => {
       const response = await axiosInstance.post(`${serverURL}/api/setPromo`, {
         option: option,
         itemsWithDiscount: itemsWithDiscount,
-        discountForAll: discountForAll
+        discountForAll: discountForAll,
+        promoType: promoType, // Include promoType in the request
+        buyQuantity: promoType === 'buyXget1' ? buyQuantity : null // Include buyQuantity for buyXget1 type
       })
       alert('Discount set successfully')
       //---reset form---
@@ -50,6 +54,8 @@ const SetPromo = () => {
       setItemsWithDiscount([])
       setDiscountForAll(0)
       setOption('specific')
+      setPromoType('percentage') // Reset promo type
+      setBuyQuantity(1) // Reset buy quantity for buyXget1
       //---end reset form---
     } catch (error) {
       console.error('Failed to fetch:', error)
@@ -63,6 +69,29 @@ const SetPromo = () => {
       className="h-fit w-[580px] space-y-4 rounded-xl bg-white p-4"
     >
       <h1 className="mb-5 text-2xl font-bold">Set Promo</h1>
+
+      {/* Promotion Type Selector */}
+      <div className="flex gap-4">
+        <label>
+          <input
+            type="radio"
+            value="percentage"
+            checked={promoType === 'percentage'}
+            onChange={() => setPromoType('percentage')}
+          />
+          Percentage
+        </label>
+        <label>
+          <input
+            type="radio"
+            value="buyXget1"
+            checked={promoType === 'buyXget1'}
+            onChange={() => setPromoType('buyXget1')}
+          />
+          Buy X Get 1
+        </label>
+      </div>
+
       <div className="relative inline-block w-64">
         <div
           className="flex cursor-pointer items-center justify-between border border-gray-300 p-2"
@@ -123,17 +152,30 @@ const SetPromo = () => {
                     setLoaded={setLoaded}
                     loading={loaded}
                   />
-                  <input
-                    className="w-1/3 rounded-lg border border-slate-500 px-2 py-3 text-lg"
-                    type="number"
-                    min="0"
-                    max="100"
-                    name="discount"
-                    id={String(product)}
-                    required
-                    placeholder="Enter discount"
-                    onChange={handleDiscountSpecific}
-                  />
+                  {promoType === 'percentage' ? (
+                    <input
+                      className="w-1/3 rounded-lg border border-slate-500 px-2 py-3 text-lg"
+                      type="number"
+                      min="0"
+                      max="80"
+                      name="discount"
+                      id={String(product)}
+                      required
+                      placeholder="Enter percentage discount"
+                      onChange={(e) => handleDiscountSpecific(e, 'percentage')}
+                    />
+                  ) : (
+                    <input
+                      className="w-1/3 rounded-lg border border-slate-500 px-2 py-3 text-lg"
+                      type="number"
+                      min="1"
+                      name="buyQuantity"
+                      id={String(product)}
+                      required
+                      placeholder="Buy X Get 1"
+                      onChange={(e) => handleDiscountSpecific(e, 'buyXget1')}
+                    />
+                  )}
                 </div>
               ))}
             </div>
@@ -145,17 +187,30 @@ const SetPromo = () => {
           <h2 className="mb-2 font-jost capitalize">
             all products will have the same discount:{' '}
           </h2>
-          <input
-            type="number"
-            className="w-full rounded-lg border border-slate-500 px-2 py-3 text-lg"
-            min="0"
-            max="100"
-            name="discount"
-            id="all"
-            required
-            placeholder="Enter discount"
-            onChange={(e) => setDiscountForAll(e.target.value)}
-          />
+          {promoType === 'percentage' ? (
+            <input
+              type="number"
+              className="w-full rounded-lg border border-slate-500 px-2 py-3 text-lg"
+              min="0"
+              max="80"
+              name="discount"
+              id="all"
+              required
+              placeholder="Enter percentage discount"
+              onChange={(e) => setDiscountForAll(e.target.value)}
+            />
+          ) : (
+            <input
+              type="number"
+              className="w-full rounded-lg border border-slate-500 px-2 py-3 text-lg"
+              min="1"
+              name="buyQuantity"
+              id="all"
+              required
+              placeholder="Enter quantity for Buy X Get 1"
+              onChange={(e) => setBuyQuantity(e.target.value)}
+            />
+          )}
         </div>
       )}
 

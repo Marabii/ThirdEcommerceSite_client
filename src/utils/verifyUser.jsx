@@ -5,43 +5,39 @@ import { jwtDecode } from 'jwt-decode'
 import axios from 'axios'
 
 const UseAuthCheck = (props) => {
-  const { interval, setIsLoggedIn, setUserData, setExploreAll } =
-    props
+  const { interval, setIsLoggedIn, setUserData, setExploreAll } = props
   const serverURL = import.meta.env.VITE_REACT_APP_SERVER
-  const [jwtTokenUnDecoded, setJwtTokenUnDecoded] = useState("")
+  const [jwtTokenUnDecoded, setJwtTokenUnDecoded] = useState('')
   const [jwtToken, setJwtToken] = useState({})
   const userId = jwtToken?.sub
 
   useEffect(() => {
-    const storedJwtToken = localStorage.getItem('jwtToken');
-  
+    const storedJwtToken = localStorage.getItem('jwtToken')
+
     if (storedJwtToken) {
-      setJwtTokenUnDecoded(storedJwtToken);
+      setJwtTokenUnDecoded(storedJwtToken)
     } else {
-      const params = new URLSearchParams(window.location.search);
-      const tokenFromUrl = params.get('token');
-  
+      const params = new URLSearchParams(window.location.search)
+      const tokenFromUrl = params.get('token')
+
       if (tokenFromUrl) {
-        setJwtTokenUnDecoded(tokenFromUrl);
-        localStorage.setItem('jwtToken', tokenFromUrl); 
+        setJwtTokenUnDecoded(tokenFromUrl)
+        localStorage.setItem('jwtToken', tokenFromUrl)
       } else {
-        setJwtTokenUnDecoded(undefined);
+        setJwtTokenUnDecoded(undefined)
       }
     }
-  }, []);
+  }, [])
 
   useEffect(() => {
     if (jwtTokenUnDecoded) setJwtToken(jwtDecode(jwtTokenUnDecoded))
   }, [jwtTokenUnDecoded])
-  
 
   useEffect(() => {
     const getUserData = async () => {
       try {
-        console.log("getUserData function ran")
-        const response = await axiosInstance(
-          `${serverURL}/api/getUserData`
-        )
+        console.log('getUserData function ran')
+        const response = await axiosInstance(`${serverURL}/api/getUserData`)
         const data = response.data
         setUserData(data)
       } catch (e) {
